@@ -160,9 +160,13 @@ int main()
     char *r57 = "GET / HTTP/1.0\r\nD1: \r\n";
     char *r58 = "GET / HTTP/1.0\r\nB1: BBAA\r\nB2:   BBBB   \r\n\r\r";
     char *r59 = "GET / HTTP/1.0\r\nZ1: BBAA\n\r\n\r";
+    char *r60 = "GET / HTTP/1.0\r\nZ2: BBAA\r\r\r\r\r\n";
+    char *r61 = "GET / HTTP/1.0\r\nR1: 1\r\nR2: 2\r\nR3: 3\r\n\r\n";
+    char *r62 = "GET / HTTP/1.0\r\nR1: 1\r\nR2: 2\r\nR3 3\r\n\r\n";
 
     TEST(r50, MK_HTTP_ERROR);
     TEST(r51, MK_HTTP_OK);
+
     TEST(r52, MK_HTTP_OK);
     TEST(r53, MK_HTTP_OK);
     TEST(r54, MK_HTTP_ERROR);
@@ -171,6 +175,9 @@ int main()
     TEST(r57, MK_HTTP_ERROR);
     TEST(r58, MK_HTTP_ERROR);
     TEST(r59, MK_HTTP_ERROR);
+    TEST(r60, MK_HTTP_ERROR);
+    TEST(r61, MK_HTTP_OK);
+    TEST(r62, MK_HTTP_ERROR);
 
     /* FIXME: Body */
 

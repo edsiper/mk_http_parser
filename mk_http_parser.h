@@ -39,7 +39,7 @@ enum {
     REQ_LEVEL_FIRST    = 1,
     REQ_LEVEL_HEADERS  ,
     REQ_LEVEL_END      ,
-    REQ_LEVEL_BODY     
+    REQ_LEVEL_BODY
 };
 
 /* Statuses per levels */
@@ -54,6 +54,7 @@ enum {
 
     /* REQ_HEADERS */
     MK_ST_HEADER_KEY        ,
+    MK_ST_HEADER_SEP        ,
     MK_ST_HEADER_VAL_STARTS ,
     MK_ST_HEADER_VALUE      ,
     MK_ST_HEADER_END        ,

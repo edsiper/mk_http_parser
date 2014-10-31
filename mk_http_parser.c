@@ -174,6 +174,10 @@ int mk_http_parser(mk_http_request_t *req, char *buffer, int len)
                     }
                     parse_next();
                 }
+                else if (buffer[i] == '\n' && buffer[i - 1] != '\r') {
+                    return MK_HTTP_ERROR;
+                }
+
                 continue;
             }
             else if (req->status == MK_ST_HEADER_END) {

@@ -159,6 +159,7 @@ int main()
     char *r56 = "GET / HTTP/1.0\r\nB1:\r\r";
     char *r57 = "GET / HTTP/1.0\r\nD1: \r\n";
     char *r58 = "GET / HTTP/1.0\r\nB1: BBAA\r\nB2:   BBBB   \r\n\r\r";
+    char *r59 = "GET / HTTP/1.0\r\nZ1: BBAA\n\r\n\r";
 
     TEST(r50, MK_HTTP_ERROR);
     TEST(r51, MK_HTTP_OK);
@@ -169,6 +170,9 @@ int main()
     TEST(r56, MK_HTTP_ERROR);
     TEST(r57, MK_HTTP_ERROR);
     TEST(r58, MK_HTTP_ERROR);
+    TEST(r59, MK_HTTP_ERROR);
+
+    /* FIXME: Body */
 
     printf("%s===> Tests Passed:%s %s%s%i/%i%s\n\n",
            ANSI_BOLD, ANSI_RESET,

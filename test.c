@@ -114,6 +114,8 @@ void test(char *id, char *buf, int res)
     else if (status == TEST_FAIL) {
         t_failed++;
     }
+
+    free(req);
 }
 
 int main()

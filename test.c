@@ -131,6 +131,8 @@ int main()
     char *r19 = "GET /?a=1&b=2 HTTP/1.0\r\n\r\n";
     char *r20 = "GET /test/?a=1&b=2 HTTP/1.0\r\n\r\n";
     char *r21 = "GET /?HTTP/1.0\r\n\r\r";
+    char *r22 = "GET /? HTTP/1.0\r\n\r\n";
+    char *r23 = "GET /? HTTP/1.0000\r\n\r\n";
 
     TEST(r10, MK_HTTP_OK);
     TEST(r11, MK_HTTP_ERROR);
@@ -144,15 +146,19 @@ int main()
     TEST(r19, MK_HTTP_OK);
     TEST(r20, MK_HTTP_OK);
     TEST(r21, MK_HTTP_PENDING);
+    TEST(r22, MK_HTTP_OK);
+    TEST(r23, MK_HTTP_ERROR);
 
     /* headers */
     char *r50 = "GET / HTTP/1.0\r\n:\r\n\r\n";
     char *r51 = "GET / HTTP/1.0\r\nA: B\r\n\r\n";
     char *r52 = "GET / HTTP/1.0\r\nA1: AAAA\r\nA2:   BBBB\r\n\r\n";
     char *r53 = "GET / HTTP/1.0\r\nB1: BBAA\r\nB2:   BBBB   \r\n\r\n";
-    char *r54 = "GET / HTTP/1.0\r\nB1:\r\n\r\n";
-    char *r55 = "GET / HTTP/1.0\r\nB1:\r\r";
-    char *r56 = "GET / HTTP/1.0\r\nB1: BBAA\r\nB2:   BBBB   \r\n\r\r";
+    char *r54 = "GET / HTTP/1.0\r\nB1: BBAA\r\nB2:   BBBB   \r\n\rA";
+    char *r55 = "GET / HTTP/1.0\r\nB1:\r\n\r\n";
+    char *r56 = "GET / HTTP/1.0\r\nB1:\r\r";
+    char *r57 = "GET / HTTP/1.0\r\nD1: \r\n";
+    char *r58 = "GET / HTTP/1.0\r\nB1: BBAA\r\nB2:   BBBB   \r\n\r\r";
 
     TEST(r50, MK_HTTP_ERROR);
     TEST(r51, MK_HTTP_OK);
@@ -161,6 +167,8 @@ int main()
     TEST(r54, MK_HTTP_ERROR);
     TEST(r55, MK_HTTP_ERROR);
     TEST(r56, MK_HTTP_ERROR);
+    TEST(r57, MK_HTTP_ERROR);
+    TEST(r58, MK_HTTP_ERROR);
 
     printf("%s===> Tests Passed:%s %s%s%i/%i%s\n\n",
            ANSI_BOLD, ANSI_RESET,

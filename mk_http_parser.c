@@ -26,6 +26,26 @@
 #define parse_next()  req->start = i + 1; req->chars++; continue
 #define field_len()   (req->end - req->start)
 
+/* Macro just for testing the parser on specific locations */
+#define remaining()                                                     \
+    {                                                                   \
+        printf("%s** Line: %i / Chars: %i%s / remaining:\n",            \
+               ANSI_BOLD, __LINE__, req->chars, ANSI_RESET);            \
+    int x = 0;                                                          \
+    for (x = i; x < len; x++) {                                         \
+    if (buffer[x] == '\n') {                                            \
+        printf("\\ n\n");                                               \
+    }                                                                   \
+    else if (buffer[x] == '\r') {                                       \
+        printf("\\ r\n");                                               \
+    }                                                                   \
+    else {                                                              \
+        printf(" %c\n", buffer[x]);                                     \
+    }                                                                   \
+                                                                        \
+    }                                                                   \
+    }
+
 /*
  * Parse the protocol and point relevant fields, don't take logic decisions
  * based on this, just parse to locate things.
@@ -73,6 +93,9 @@ int mk_http_parser(mk_http_request_t *req, char *buffer, int len)
             case MK_ST_REQ_PROT_VERSION:                /* Protocol Version */
                 if (buffer[i] == '\r') {
                     mark_end();
+                    if (field_len() != 8) {
+                        return MK_HTTP_ERROR;
+                    }
                     req->status = MK_ST_LF;
                     continue;
                 }
@@ -115,18 +138,17 @@ int mk_http_parser(mk_http_request_t *req, char *buffer, int len)
             if (req->status == MK_ST_HEADER_KEY) {
                 /* Check if is there is no more headers */
                 if (req->chars == 0) {
-                    if (buffer[i+1] == '\r') {
-                        req->level  = REQ_LEVEL_END;
+                    if (buffer[i] == '\r') {
+                        req->level = REQ_LEVEL_END;
                         parse_next();
                     }
                 }
                 /* Found key/value separator */
-                else if (buffer[i] == ':') {
+                if (buffer[i] == ':') {
                     mark_end();
                     if (field_len() < 1) {
                         return MK_HTTP_ERROR;
                     }
-
                     /* Wait for a value */
                     req->status = MK_ST_HEADER_VALUE;
                     parse_next();
@@ -160,15 +182,23 @@ int mk_http_parser(mk_http_request_t *req, char *buffer, int len)
                     req->chars = -1;
                     parse_next();
                 }
+                else {
+                    return MK_HTTP_ERROR;
+                }
             }
         }
         else if (req->level == REQ_LEVEL_END) {
-            if (buffer[i] == '\r') {
-                printf("here2!\n");
-                req->status = MK_ST_BLOCK_END;
+            if (req->chars == 1 && buffer[i] == '\n') {
+                req->level = REQ_LEVEL_BODY;
                 req->chars = -1;
                 parse_next();
             }
+            else {
+                return MK_HTTP_ERROR;
+            }
+        }
+        else if (req->level == REQ_LEVEL_BODY) {
+            return MK_HTTP_OK;
         }
     }
 
@@ -188,6 +218,15 @@ int mk_http_parser(mk_http_request_t *req, char *buffer, int len)
         }
         else {
         }
+    }
+    else if (req->level == REQ_LEVEL_BODY) {
+        if (req->chars == 0) {
+            return MK_HTTP_OK;
+        }
+        else {
+            printf("char=%i\n", req->chars);
+        }
+
     }
 
     return MK_HTTP_PENDING;

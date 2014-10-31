@@ -37,8 +37,9 @@
 
 enum {
     REQ_LEVEL_FIRST    = 1,
-    REQ_LEVEL_HEADERS  = 2,
-    REQ_LEVEL_BODY     = 3
+    REQ_LEVEL_HEADERS  ,
+    REQ_LEVEL_END      ,
+    REQ_LEVEL_BODY     
 };
 
 /* Statuses per levels */
@@ -70,6 +71,7 @@ typedef struct {
     /* lookup fields */
     int start;
     int end;
+    int chars;
 } mk_http_request_t;
 
 mk_http_request_t *mk_http_request_new();
@@ -79,6 +81,7 @@ int mk_http_parser(mk_http_request_t *req, char *buffer, int len);
 #ifdef HTTP_STANDALONE
 
 /* ANSI Colors */
+
 #define ANSI_RESET "\033[0m"
 #define ANSI_BOLD  "\033[1m"
 
@@ -153,10 +156,6 @@ static inline int eval_field(mk_http_request_t *req, char *buffer)
 
     return 0;
 }
+#endif /* HTTP_STANDALONE */
 
-
-
-#endif
-
-
-#endif
+#endif /* MK_HTTP_H */

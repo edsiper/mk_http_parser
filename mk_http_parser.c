@@ -22,8 +22,8 @@
 
 #include "mk_http_parser.h"
 
-#define mark_end()    req->end   = i; req->chars = 0; eval_field(req, buffer)
-#define parse_next()  req->start = i + 1; req->chars++; continue
+#define mark_end()    req->end   = i; req->chars = -1; eval_field(req, buffer)
+#define parse_next()  req->start = i + 1; continue
 #define field_len()   (req->end - req->start)
 
 /* Macro just for testing the parser on specific locations */
@@ -54,7 +54,7 @@ int mk_http_parser(mk_http_request_t *req, char *buffer, int len)
 {
     int i;
 
-    for (i = 0; i < len; i++) {
+    for (i = 0; i < len; i++, req->chars++) {
         /* FIRST LINE LEVEL: Method, URI & Protocol */
         if (req->level == REQ_LEVEL_FIRST) {
             switch (req->status) {
@@ -136,11 +136,13 @@ int mk_http_parser(mk_http_request_t *req, char *buffer, int len)
         else if (req->level == REQ_LEVEL_HEADERS) {
             /* Expect a Header key */
             if (req->status == MK_ST_HEADER_KEY) {
-                /* Check if is there is no more headers */
-                if (req->chars == 0) {
-                    if (buffer[i] == '\r') {
+                if (buffer[i] == '\r') {
+                    if (req->chars == 0) {
                         req->level = REQ_LEVEL_END;
                         parse_next();
+                    }
+                    else {
+                        return MK_HTTP_ERROR;
                     }
                 }
                 /* Found key/value separator */
@@ -177,7 +179,6 @@ int mk_http_parser(mk_http_request_t *req, char *buffer, int len)
                 else if (buffer[i] == '\n' && buffer[i - 1] != '\r') {
                     return MK_HTTP_ERROR;
                 }
-
                 continue;
             }
             else if (req->status == MK_ST_HEADER_END) {
@@ -192,7 +193,7 @@ int mk_http_parser(mk_http_request_t *req, char *buffer, int len)
             }
         }
         else if (req->level == REQ_LEVEL_END) {
-            if (req->chars == 1 && buffer[i] == '\n') {
+            if (buffer[i] == '\n') {
                 req->level = REQ_LEVEL_BODY;
                 req->chars = -1;
                 parse_next();
@@ -228,7 +229,6 @@ int mk_http_parser(mk_http_request_t *req, char *buffer, int len)
             return MK_HTTP_OK;
         }
         else {
-            printf("char=%i\n", req->chars);
         }
 
     }
@@ -246,6 +246,6 @@ mk_http_request_t *mk_http_request_new()
     req->length = 0;
     req->start  = 0;
     req->end    = 0;
-
+    req->chars  = -1;
     return req;
 }

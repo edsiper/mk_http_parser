@@ -118,7 +118,7 @@ struct mk_http_parser {
     int header_min;
     int header_max;
 
-    struct mk_http_header headers[32];
+    struct mk_http_header headers[MK_HEADER_SIZEOF];
 };
 
 struct mk_http_parser *mk_http_parser_new();

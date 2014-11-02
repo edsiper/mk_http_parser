@@ -63,7 +63,7 @@ enum {
     MK_ST_LF
 };
 
-typedef struct {
+struct mk_http_parser {
     int level;   /* request level */
     int status;  /* level status */
     int next;    /* something next after status ? */
@@ -73,10 +73,15 @@ typedef struct {
     int start;
     int end;
     int chars;
-} mk_http_request_t;
+};
 
-mk_http_request_t *mk_http_request_new();
-int mk_http_parser(mk_http_request_t *req, char *buffer, int len);
+struct mk_http_headers {
+
+
+};
+
+struct mk_http_parser *mk_http_parser_new();
+int mk_http_parser(struct mk_http_parser *req, char *buffer, int len);
 
 
 #ifdef HTTP_STANDALONE
@@ -105,7 +110,7 @@ int mk_http_parser(mk_http_request_t *req, char *buffer, int len);
 #define TEST_FAIL    1
 
 
-static inline void p_field(mk_http_request_t *req, char *buffer)
+static inline void p_field(struct mk_http_parser *req, char *buffer)
 {
     int i;
 
@@ -117,7 +122,7 @@ static inline void p_field(mk_http_request_t *req, char *buffer)
 
 }
 
-static inline int eval_field(mk_http_request_t *req, char *buffer)
+static inline int eval_field(struct mk_http_parser *req, char *buffer)
 {
     if (req->level == REQ_LEVEL_FIRST) {
         printf("[ \033[35mfirst level\033[0m ] ");

@@ -33,7 +33,7 @@ void test(char *id, char *buf, int res)
     int len;
     int ret;
     int status = TEST_FAIL;
-    mk_http_request_t *req = mk_http_request_new();
+    struct mk_http_parser *req = mk_http_parser_new();
 
     len = strlen(buf);
     ret = mk_http_parser(req, buf, len);
@@ -120,7 +120,7 @@ void test(char *id, char *buf, int res)
 
 int main()
 {
-    /* first line */
+    /* Test First Line */
     char *r10 = "GET / HTTP/1.0\r\n\r\n";
     char *r11 = "GET/HTTP/1.0\r\n\r\n";
     char *r12 = "GET /HTTP/1.0\r\n\r\n";
@@ -151,7 +151,7 @@ int main()
     TEST(r22, MK_HTTP_OK);
     TEST(r23, MK_HTTP_ERROR);
 
-    /* headers */
+    /* Test Headers */
     char *r50 = "GET / HTTP/1.0\r\n:\r\n\r\n";
     char *r51 = "GET / HTTP/1.0\r\nA: B\r\n\r\n";
     char *r52 = "GET / HTTP/1.0\r\nA1: AAAA\r\nA2:   BBBB\r\n\r\n";
@@ -181,7 +181,12 @@ int main()
     TEST(r61, MK_HTTP_OK);
     TEST(r62, MK_HTTP_ERROR);
 
-    /* FIXME: Body */
+    /* Test Request with a Body */
+    char *r100 = "POST / HTTP/1.0\r\n"
+                 "Content-Length: 10\r\n\r\n"
+                 "0123456789";
+
+    TEST(r100, MK_HTTP_OK);
 
     printf("%s===> Tests Passed:%s %s%s%i/%i%s\n\n",
            ANSI_BOLD, ANSI_RESET,

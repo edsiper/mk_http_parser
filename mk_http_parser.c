@@ -50,7 +50,7 @@
  * Parse the protocol and point relevant fields, don't take logic decisions
  * based on this, just parse to locate things.
  */
-int mk_http_parser(mk_http_request_t *req, char *buffer, int len)
+int mk_http_parser(struct mk_http_parser *req, char *buffer, int len)
 {
     int i;
 
@@ -203,6 +203,14 @@ int mk_http_parser(mk_http_request_t *req, char *buffer, int len)
             }
         }
         else if (req->level == REQ_LEVEL_BODY) {
+            /*
+             * Reaching this level can means two things:
+             *
+             * - A Pipeline Request
+             * - A Body content (POST/PUT methods
+             */
+            printf("reach body\n");
+            remaining();
             return MK_HTTP_OK;
         }
     }
@@ -236,11 +244,11 @@ int mk_http_parser(mk_http_request_t *req, char *buffer, int len)
     return MK_HTTP_PENDING;
 }
 
-mk_http_request_t *mk_http_request_new()
+struct mk_http_parser *mk_http_parser_new()
 {
-    mk_http_request_t *req;
+    struct mk_http_parser *req;
 
-    req = malloc(sizeof(mk_http_request_t));
+    req = malloc(sizeof(struct mk_http_parser));
     req->level  = REQ_LEVEL_FIRST;
     req->status = MK_ST_REQ_METHOD;
     req->length = 0;

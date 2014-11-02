@@ -22,6 +22,12 @@
 #ifndef MK_HTTP_H
 #define MK_HTTP_H
 
+typedef struct
+{
+    char *data;
+    unsigned long len;
+} mk_ptr_t;
+
 /* General status */
 #define MK_HTTP_PENDING -10  /* cannot complete until more data arrives */
 #define MK_HTTP_ERROR    -1  /* found an error when parsing the string */
@@ -63,6 +69,38 @@ enum {
     MK_ST_LF
 };
 
+/*
+ * Define a list of known headers, they are used to perform headers
+ * lookups in the parser and further Monkey core.
+ */
+enum {
+    MK_HEADER_ACCEPT             = 0,
+    MK_HEADER_ACCEPT_CHARSET        ,
+    MK_HEADER_ACCEPT_ENCODING       ,
+    MK_HEADER_ACCEPT_LANGUAGE       ,
+    MK_HEADER_COOKIE                ,
+    MK_HEADER_CONNECTION            ,
+    MK_HEADER_CONTENT_LENGTH        ,
+    MK_HEADER_CONTENT_RANGE         ,
+    MK_HEADER_CONTENT_TYPE          ,
+    MK_HEADER_IF_MODIFIED_SINCE     ,
+    MK_HEADER_HOST                  ,
+    MK_HEADER_LAST_MODIFIED         ,
+    MK_HEADER_LAST_MODIFIED_SINCE   ,
+    MK_HEADER_REFERER               ,
+    MK_HEADER_RANGE                 ,
+    MK_HEADER_USER_AGENT            ,
+    MK_HEADER_SIZEOF
+};
+
+struct mk_http_header {
+    int type;
+    mk_ptr_t *key;
+    mk_ptr_t *val;
+};
+
+
+/* This structure is the 'Parser Context' */
 struct mk_http_parser {
     int level;   /* request level */
     int status;  /* level status */
@@ -73,11 +111,14 @@ struct mk_http_parser {
     int start;
     int end;
     int chars;
-};
 
-struct mk_http_headers {
+    /* probable current header, fly parsing */
+    int header_key;
+    int header_sep;
+    int header_min;
+    int header_max;
 
-
+    struct mk_http_header headers[MK_HEADER_SIZEOF];
 };
 
 struct mk_http_parser *mk_http_parser_new();

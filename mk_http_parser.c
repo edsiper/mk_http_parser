@@ -19,12 +19,37 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "mk_http_parser.h"
 
 #define mark_end()    req->end   = i; req->chars = -1; eval_field(req, buffer)
 #define parse_next()  req->start = i + 1; continue
 #define field_len()   (req->end - req->start)
+
+struct header_entry {
+    int len;
+    const char name[32];
+};
+
+struct header_entry headers_table[] = {
+    {  6, "Accept"              },
+    { 14, "Accept-Charset"      },
+    { 15, "Accept-Encoding"     },
+    { 15, "Accept-Language"     },
+    {  6, "Cookie"              },
+    { 10, "Connection"          },
+    { 14, "Content-Length"      },
+    { 13, "Content-Range"       },
+    { 12, "Content-Type"        },
+    { 17, "If-Modified-Since"   },
+    {  4, "Host"                },
+    { 13, "Last-Modified"       },
+    { 19, "Last-Modified-Since" },
+    {  7, "Referer"             },
+    {  5, "Range"               },
+    { 10, "User-Agent"          }
+};
 
 /* Macro just for testing the parser on specific locations */
 #define remaining()                                                     \
@@ -45,6 +70,45 @@
                                                                         \
     }                                                                   \
     }
+
+static inline void header_lookup(struct mk_http_parser *req, char *buffer)
+{
+    int i;
+    int len;
+    struct header_entry *h;
+
+    len = (req->header_sep - req->header_key);
+
+    for (i = req->header_min; i <= req->header_max; i++) {
+        h = &headers_table[i];
+
+        /* Check string length first */
+        if (h->len != len) {
+            continue;
+        }
+
+        if (strncmp(buffer + req->header_key + 1,
+                    h->name + 1,
+                    len - 1) == 0) {
+            printf("                 ===> %sMATCH%s '%s'\n",
+                   ANSI_YELLOW, ANSI_RESET, h->name);
+
+            /* We got a header match, register the header index */
+            req->headers[i].type = i;
+            req->headers[i].key->data = buffer + req->header_key;
+            req->headers[i].key->len  = len;
+
+            /* FIXME: register header value */
+
+            return ;
+        }
+    }
+
+    printf("                 ===> %sHEADER / NO MATCH%s\n",
+           ANSI_RED, ANSI_RESET);
+
+    printf("\n");
+}
 
 /*
  * Parse the protocol and point relevant fields, don't take logic decisions
@@ -118,6 +182,7 @@ int mk_http_parser(struct mk_http_parser *req, char *buffer, int len)
                     req->level = REQ_LEVEL_HEADERS;
                     req->status = MK_ST_HEADER_KEY;
                     i--;
+                    mark_end();
                     parse_next();
                 }
                 break;
@@ -145,12 +210,68 @@ int mk_http_parser(struct mk_http_parser *req, char *buffer, int len)
                         return MK_HTTP_ERROR;
                     }
                 }
+
+                /* FIXME: TEST 52 SOMETHING WRONG WITH CHARS! */
+                if (req->chars == 0) {
+                    /*
+                     * We reach the start of a Header row, lets catch the most
+                     * probable header. Note that we don't accept headers starting
+                     * in lowercase.
+                     *
+                     * The goal of this 'first row character lookup', is to define a
+                     * small range set of probable headers comparison once we catch
+                     * a header end.
+                     */
+                    switch (buffer[i]) {
+                    case 'A':
+                        req->header_min = MK_HEADER_ACCEPT;
+                        req->header_max = MK_HEADER_ACCEPT_LANGUAGE;
+                        break;
+                    case 'C':
+                        req->header_min = MK_HEADER_COOKIE;
+                        req->header_max = MK_HEADER_CONTENT_TYPE;
+                        break;
+                    case 'I':
+                        req->header_min = MK_HEADER_IF_MODIFIED_SINCE;
+                        req->header_max = MK_HEADER_IF_MODIFIED_SINCE;
+                        break;
+                    case 'H':
+                        req->header_min = MK_HEADER_HOST;
+                        req->header_max = MK_HEADER_HOST;
+                        break;
+                    case 'L':
+                        req->header_min = MK_HEADER_LAST_MODIFIED;
+                        req->header_max = MK_HEADER_LAST_MODIFIED_SINCE;
+                        break;
+                    case 'R':
+                        req->header_min = MK_HEADER_REFERER;
+                        req->header_max = MK_HEADER_RANGE;
+                        break;
+                    case 'U':
+                        req->header_min = MK_HEADER_USER_AGENT;
+                        req->header_max = MK_HEADER_USER_AGENT;
+                        break;
+                    default:
+                        req->header_key = -1;
+                        req->header_sep = -1;
+                        req->header_min = -1;
+                        req->header_max = -1;
+                    };
+                }
+
                 /* Found key/value separator */
                 if (buffer[i] == ':') {
+                    /* Set the key/value middle point */
+                    req->header_key = req->start;
+                    req->header_sep = i;
+
                     mark_end();
+
+                    /* validate length */
                     if (field_len() < 1) {
                         return MK_HTTP_ERROR;
                     }
+
                     /* Wait for a value */
                     req->status = MK_ST_HEADER_VALUE;
                     parse_next();
@@ -174,6 +295,12 @@ int mk_http_parser(struct mk_http_parser *req, char *buffer, int len)
                     if (field_len() <= 0) {
                         return MK_HTTP_ERROR;
                     }
+
+                    /*
+                     * A header row has ended, lets lookup the header and populate
+                     * our headers table index.
+                     */
+                    header_lookup(req, buffer);
                     parse_next();
                 }
                 else if (buffer[i] == '\n' && buffer[i - 1] != '\r') {
@@ -255,5 +382,11 @@ struct mk_http_parser *mk_http_parser_new()
     req->start  = 0;
     req->end    = 0;
     req->chars  = -1;
+
+    /* init headers */
+    req->header_min = -1;
+    req->header_max = -1;
+    req->header_sep = -1;
+
     return req;
 }

@@ -151,7 +151,7 @@ int main()
     TEST(r22, MK_HTTP_OK);
     TEST(r23, MK_HTTP_ERROR);
 
-    /* Test Headers */
+    /* Test Headers: format */
     char *r50 = "GET / HTTP/1.0\r\n:\r\n\r\n";
     char *r51 = "GET / HTTP/1.0\r\nA: B\r\n\r\n";
     char *r52 = "GET / HTTP/1.0\r\nA1: AAAA\r\nA2:   BBBB\r\n\r\n";
@@ -181,12 +181,34 @@ int main()
     TEST(r61, MK_HTTP_OK);
     TEST(r62, MK_HTTP_ERROR);
 
-    /* Test Request with a Body */
-    char *r100 = "POST / HTTP/1.0\r\n"
+    /* Test Headers lookup */
+    char *r100 = "GET / HTTP/1.0\r\n"  \
+        "Accept: everything\r\n"       \
+        "Accept-Charset: UTF\r\n"      \
+        "Accept-Encoding: None\r\n"    \
+        "Accept-Language: en\r\n"      \
+        "Cookie: key=val;\r\n"         \
+        "Connection: close\r\n"        \
+        "Content-Length: 0\r\n"        \
+        "Content-Range: 0-0\r\n"       \
+        "Content-Type: None\r\n"       \
+        "If-Modified-Since: 1900\r\n"  \
+        "Host: localhost: xyz\r\n"     \
+        "Last-Modified: abc\r\n"       \
+        "Last-Modified-Since: abc\r\n" \
+        "Referer: microsoft\r\n"       \
+        "Range: 456789\r\n"            \
+        "User-Agent: links\r\n"        \
+        "\r\n";
+    TEST(r100, MK_HTTP_OK);
+
+    /* Test Request with a Body
+    char *r200 = "POST / HTTP/1.0\r\n"
                  "Content-Length: 10\r\n\r\n"
                  "0123456789";
 
-    TEST(r100, MK_HTTP_OK);
+                 TEST(r200, MK_HTTP_OK);
+    */
 
     printf("%s===> Tests Passed:%s %s%s%i/%i%s\n\n",
            ANSI_BOLD, ANSI_RESET,

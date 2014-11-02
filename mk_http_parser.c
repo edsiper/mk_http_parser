@@ -75,6 +75,7 @@ static inline void header_lookup(struct mk_http_parser *req, char *buffer)
 {
     int i;
     int len;
+    struct mk_http_header *header;
     struct header_entry *h;
 
     len = (req->header_sep - req->header_key);
@@ -94,12 +95,12 @@ static inline void header_lookup(struct mk_http_parser *req, char *buffer)
                    ANSI_YELLOW, ANSI_RESET, h->name);
 
             /* We got a header match, register the header index */
-            req->headers[i].type = i;
-            req->headers[i].key->data = buffer + req->header_key;
-            req->headers[i].key->len  = len;
+            header = &req->headers[i];
+            header->type = i;
+            header->key.data = buffer + req->header_key;
+            header->key.len  = len;
 
             /* FIXME: register header value */
-
             return ;
         }
     }

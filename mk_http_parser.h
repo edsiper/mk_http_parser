@@ -95,8 +95,8 @@ enum {
 
 struct mk_http_header {
     int type;
-    mk_ptr_t *key;
-    mk_ptr_t *val;
+    mk_ptr_t key;
+    mk_ptr_t val;
 };
 
 
@@ -118,7 +118,7 @@ struct mk_http_parser {
     int header_min;
     int header_max;
 
-    struct mk_http_header headers[MK_HEADER_SIZEOF];
+    struct mk_http_header headers[32];
 };
 
 struct mk_http_parser *mk_http_parser_new();

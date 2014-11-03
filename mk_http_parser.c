@@ -26,6 +26,7 @@
 #define mark_end()    req->end   = i; req->chars = -1; eval_field(req, buffer)
 #define parse_next()  req->start = i + 1; continue
 #define field_len()   (req->end - req->start)
+#define header_scope_eq(req, x) req->header_min = req->header_max = x
 
 struct header_entry {
     int len;
@@ -252,12 +253,10 @@ int mk_http_parser(struct mk_http_parser *req, char *buffer, int len)
                         req->header_max = MK_HEADER_CONTENT_TYPE;
                         break;
                     case 'I':
-                        req->header_min = MK_HEADER_IF_MODIFIED_SINCE;
-                        req->header_max = MK_HEADER_IF_MODIFIED_SINCE;
+                        header_scope_eq(req, MK_HEADER_IF_MODIFIED_SINCE);
                         break;
                     case 'H':
-                        req->header_min = MK_HEADER_HOST;
-                        req->header_max = MK_HEADER_HOST;
+                        header_scope_eq(req, MK_HEADER_HOST);
                         break;
                     case 'L':
                         req->header_min = MK_HEADER_LAST_MODIFIED;
@@ -268,8 +267,7 @@ int mk_http_parser(struct mk_http_parser *req, char *buffer, int len)
                         req->header_max = MK_HEADER_RANGE;
                         break;
                     case 'U':
-                        req->header_min = MK_HEADER_USER_AGENT;
-                        req->header_max = MK_HEADER_USER_AGENT;
+                        header_scope_eq(req, MK_HEADER_USER_AGENT);
                         break;
                     default:
                         req->header_key = -1;

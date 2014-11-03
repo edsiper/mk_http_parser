@@ -220,7 +220,6 @@ int main()
     TEST(r202, MK_HTTP_PENDING);
     TEST(r203, MK_HTTP_ERROR);
 
-
     printf("%s===> Tests Passed:%s %s%s%i/%i%s\n\n",
            ANSI_BOLD, ANSI_RESET,
            ANSI_BOLD,

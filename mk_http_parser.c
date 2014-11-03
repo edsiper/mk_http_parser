@@ -57,19 +57,19 @@ struct header_entry headers_table[] = {
     {                                                                   \
         printf("%s** Line: %i / Chars: %i%s / remaining:\n",            \
                ANSI_BOLD, __LINE__, req->chars, ANSI_RESET);            \
-    int x = 0;                                                          \
-    for (x = i; x < len; x++) {                                         \
-    if (buffer[x] == '\n') {                                            \
-        printf("\\ n\n");                                               \
-    }                                                                   \
-    else if (buffer[x] == '\r') {                                       \
+        int x = 0;                                                      \
+        for (x = i; x < len; x++) {                                     \
+            if (buffer[x] == '\n') {                                    \
+                printf("\\ n\n");                                       \
+            }                                                           \
+            else if (buffer[x] == '\r') {                               \
         printf("\\ r\n");                                               \
-    }                                                                   \
-    else {                                                              \
-        printf(" %c\n", buffer[x]);                                     \
-    }                                                                   \
+            }                                                           \
+            else {                                                      \
+                printf(" %c\n", buffer[x]);                             \
+            }                                                           \
                                                                         \
-    }                                                                   \
+        }                                                               \
     }
 
 static inline int header_lookup(struct mk_http_parser *req, char *buffer)

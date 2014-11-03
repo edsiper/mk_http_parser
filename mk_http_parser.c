@@ -92,14 +92,24 @@ static inline void header_lookup(struct mk_http_parser *req, char *buffer)
         if (strncmp(buffer + req->header_key + 1,
                     h->name + 1,
                     len - 1) == 0) {
-            printf("                 ===> %sMATCH%s '%s'\n",
-                   ANSI_YELLOW, ANSI_RESET, h->name);
 
             /* We got a header match, register the header index */
             header = &req->headers[i];
             header->type = i;
             header->key.data = buffer + req->header_key;
             header->key.len  = len;
+            header->val.data = buffer + req->header_val;
+            header->val.len  = req->end - req->header_val;
+
+            printf("                 ===> %sMATCH%s '%s' = '",
+                   ANSI_YELLOW, ANSI_RESET, h->name);
+
+
+            int z;
+            for (z = req->header_val; z < req->end; z++) {
+                printf("%c", buffer[z]);
+            }
+            printf("'\n");
 
             /* FIXME: register header value */
             return ;
@@ -284,6 +294,7 @@ int mk_http_parser(struct mk_http_parser *req, char *buffer, int len)
                 /* Trim left, set starts only when found something != ' ' */
                 if (buffer[i] != ' ') {
                     req->status = MK_ST_HEADER_VAL_STARTS;
+                    req->header_val = i;
                     i--;
                     parse_next();
                 }

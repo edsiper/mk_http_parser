@@ -116,6 +116,7 @@ struct mk_http_parser {
     /* probable current header, fly parsing */
     int header_key;
     int header_sep;
+    int header_val;
     int header_min;
     int header_max;
 

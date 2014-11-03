@@ -113,6 +113,10 @@ struct mk_http_parser {
     int end;
     int chars;
 
+    /* it stores the numeric value of Content-Length header */
+    size_t body_received;
+    size_t header_content_length;
+
     /* probable current header, fly parsing */
     int header_key;
     int header_sep;

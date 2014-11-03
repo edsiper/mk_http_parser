@@ -101,6 +101,10 @@ static inline void header_lookup(struct mk_http_parser *req, char *buffer)
             header->val.data = buffer + req->header_val;
             header->val.len  = req->end - req->header_val;
 
+            if (i == MK_HEADER_CONTENT_LENGTH) {
+                req->header_content_length = atol(header->val.data);
+            }
+
             printf("                 ===> %sMATCH%s '%s' = '",
                    ANSI_YELLOW, ANSI_RESET, h->name);
 
@@ -116,7 +120,7 @@ static inline void header_lookup(struct mk_http_parser *req, char *buffer)
         }
     }
 
-    printf("                 ===> %sHEADER / NO MATCH%s\n",
+    printf("                 ===> %sUNKNOWN HEADER%s",
            ANSI_RED, ANSI_RESET);
 
     printf("\n");
@@ -223,7 +227,6 @@ int mk_http_parser(struct mk_http_parser *req, char *buffer, int len)
                     }
                 }
 
-                /* FIXME: TEST 52 SOMETHING WRONG WITH CHARS! */
                 if (req->chars == 0) {
                     /*
                      * We reach the start of a Header row, lets catch the most
@@ -349,8 +352,15 @@ int mk_http_parser(struct mk_http_parser *req, char *buffer, int len)
              * - A Pipeline Request
              * - A Body content (POST/PUT methods
              */
-            printf("reach body\n");
-            remaining();
+            if (req->header_content_length > 0) {
+                req->body_received = len - i;
+                if (req->body_received == req->header_content_length) {
+                    return MK_HTTP_OK;
+                }
+                else {
+                    return MK_HTTP_PENDING;
+                }
+            }
             return MK_HTTP_OK;
         }
     }
@@ -373,7 +383,11 @@ int mk_http_parser(struct mk_http_parser *req, char *buffer, int len)
         }
     }
     else if (req->level == REQ_LEVEL_BODY) {
-        if (req->chars == 0) {
+        if (req->header_content_length > 0 &&
+            req->body_received < req->header_content_length) {
+            return MK_HTTP_PENDING;
+        }
+        else if (req->chars == 0) {
             return MK_HTTP_OK;
         }
         else {
@@ -400,6 +414,8 @@ struct mk_http_parser *mk_http_parser_new()
     req->header_min = -1;
     req->header_max = -1;
     req->header_sep = -1;
+    req->body_received  = 0;
+    req->header_content_length = 0;
 
     return req;
 }

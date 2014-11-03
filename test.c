@@ -203,13 +203,20 @@ int main()
         "\r\n";
     TEST(r100, MK_HTTP_OK);
 
-    /* Test Request with a Body
+    /* Test Request with a Body */
     char *r200 = "POST / HTTP/1.0\r\n"
                  "Content-Length: 10\r\n\r\n"
                  "0123456789";
+    char *r201 = "POST / HTTP/1.0\r\n"
+                 "Content-Length: 10\r\n\r\n"
+                 "012345678";
+    char *r202 = "POST / HTTP/1.0\r\n"
+                 "Content-Length: 10\r\n\r\n";
 
-                 TEST(r200, MK_HTTP_OK);
-    */
+    TEST(r200, MK_HTTP_OK);
+    TEST(r201, MK_HTTP_PENDING);
+    TEST(r202, MK_HTTP_PENDING);
+
 
     printf("%s===> Tests Passed:%s %s%s%i/%i%s\n\n",
            ANSI_BOLD, ANSI_RESET,

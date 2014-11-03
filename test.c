@@ -212,10 +212,13 @@ int main()
                  "012345678";
     char *r202 = "POST / HTTP/1.0\r\n"
                  "Content-Length: 10\r\n\r\n";
+    char *r203 = "POST / HTTP/1.0\r\n"
+                 "Content-Length: -10\r\n\r\n";
 
     TEST(r200, MK_HTTP_OK);
     TEST(r201, MK_HTTP_PENDING);
     TEST(r202, MK_HTTP_PENDING);
+    TEST(r203, MK_HTTP_ERROR);
 
 
     printf("%s===> Tests Passed:%s %s%s%i/%i%s\n\n",

@@ -72,7 +72,7 @@ struct header_entry headers_table[] = {
     }                                                                   \
     }
 
-static inline void header_lookup(struct mk_http_parser *req, char *buffer)
+static inline int header_lookup(struct mk_http_parser *req, char *buffer)
 {
     int i;
     int len;
@@ -103,6 +103,9 @@ static inline void header_lookup(struct mk_http_parser *req, char *buffer)
 
             if (i == MK_HEADER_CONTENT_LENGTH) {
                 req->header_content_length = atol(header->val.data);
+                if (req->header_content_length < 0) {
+                    return -1;
+                }
             }
 
             printf("                 ===> %sMATCH%s '%s' = '",
@@ -116,7 +119,7 @@ static inline void header_lookup(struct mk_http_parser *req, char *buffer)
             printf("'\n");
 
             /* FIXME: register header value */
-            return ;
+            return 0;
         }
     }
 
@@ -124,6 +127,7 @@ static inline void header_lookup(struct mk_http_parser *req, char *buffer)
            ANSI_RED, ANSI_RESET);
 
     printf("\n");
+    return 0;
 }
 
 /*
@@ -133,6 +137,7 @@ static inline void header_lookup(struct mk_http_parser *req, char *buffer)
 int mk_http_parser(struct mk_http_parser *req, char *buffer, int len)
 {
     int i;
+    int ret;
 
     for (i = 0; i < len; i++, req->chars++) {
         /* FIRST LINE LEVEL: Method, URI & Protocol */
@@ -316,7 +321,10 @@ int mk_http_parser(struct mk_http_parser *req, char *buffer, int len)
                      * A header row has ended, lets lookup the header and populate
                      * our headers table index.
                      */
-                    header_lookup(req, buffer);
+                    ret = header_lookup(req, buffer);
+                    if (ret != 0) {
+                        return MK_HTTP_ERROR;
+                    }
                     parse_next();
                 }
                 else if (buffer[i] == '\n' && buffer[i - 1] != '\r') {

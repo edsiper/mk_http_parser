@@ -37,6 +37,7 @@ struct header_entry headers_table[] = {
     { 14, "Accept-Charset"      },
     { 15, "Accept-Encoding"     },
     { 15, "Accept-Language"     },
+    { 13, "Authorization"       },
     {  6, "Cookie"              },
     { 10, "Connection"          },
     { 14, "Content-Length"      },
@@ -226,7 +227,7 @@ int mk_http_parser(struct mk_http_parser *req, char *buffer, int len)
                     switch (buffer[i]) {
                     case 'A':
                         req->header_min = MK_HEADER_ACCEPT;
-                        req->header_max = MK_HEADER_ACCEPT_LANGUAGE;
+                        req->header_max = MK_HEADER_AUTHORIZATION;
                         break;
                     case 'C':
                         req->header_min = MK_HEADER_COOKIE;

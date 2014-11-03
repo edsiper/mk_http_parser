@@ -187,6 +187,7 @@ int main()
         "Accept-Charset: UTF\r\n"      \
         "Accept-Encoding: None\r\n"    \
         "Accept-Language: en\r\n"      \
+        "Authorization: xyz\r\n"       \
         "Cookie: key=val;\r\n"         \
         "Connection: close\r\n"        \
         "Content-Length: 0\r\n"        \

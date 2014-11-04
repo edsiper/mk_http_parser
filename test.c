@@ -39,9 +39,8 @@ void test(char *id, char *buf, int res)
     len = strlen(buf);
 
     for (i = 0; i < len; i++) {
-        //printf("dipatch: '%c'\n", buf[i]);
         ret = mk_http_parser(req, buf, 1);
-        if (ret != MK_HTTP_PENDING) {
+        if (ret == MK_HTTP_ERROR) {
             break;
         }
     }

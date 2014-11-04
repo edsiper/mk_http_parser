@@ -131,7 +131,7 @@ static inline int header_lookup(struct mk_http_parser *req, char *buffer)
         }
     }
 
-    printf("                 ===> %sUNKNOWN HEADER%s\n",
+    printf("                 ===> %sunknown header key%s\n",
            ANSI_RED, ANSI_RESET);
 
     return 0;
@@ -149,18 +149,12 @@ int mk_http_parser(struct mk_http_parser *req, char *buffer, int len)
 
     limit = len + req->i;
     for (i = req->i; i < limit; i++, req->i++, req->chars++) {
-        /*
-        printf("i=%i len=%i ; buf[i]='%c' req->start=%i req->end=%i\n",
-               i, len, buffer[i], req->start, req->end);
-        */
         /* FIRST LINE LEVEL: Method, URI & Protocol */
         if (req->level == REQ_LEVEL_FIRST) {
             switch (req->status) {
             case MK_ST_REQ_METHOD:                      /* HTTP Method */
                 if (buffer[i] == ' ') {
                     mark_end();
-                    //printf("i=%i len=%i ; buf[i]='%c' req->start=%i req->end=%i\n",
-                    //       i, len, buffer[i], req->start, req->end);
                     req->status = MK_ST_REQ_URI;
                     if (req->end < 2) {
                         return MK_HTTP_ERROR;
@@ -286,6 +280,7 @@ int mk_http_parser(struct mk_http_parser *req, char *buffer, int len)
                         req->header_min = -1;
                         req->header_max = -1;
                     };
+                    continue;
                 }
 
                 /* Found key/value separator */
@@ -308,30 +303,24 @@ int mk_http_parser(struct mk_http_parser *req, char *buffer, int len)
             /* Parsing the header value */
             else if (req->status == MK_ST_HEADER_VALUE) {
                 /* Trim left, set starts only when found something != ' ' */
-                if (buffer[i] != ' ') {
-                    req->status = MK_ST_HEADER_VAL_STARTS;
-                    req->header_val = i;
-                    parse_next();
-                    //continue;
+                if (buffer[i] == '\r' || buffer[i] == '\n') {
+                    return MK_HTTP_ERROR;
                 }
+                else if (buffer[i] != ' ') {
+                    req->status = MK_ST_HEADER_VAL_STARTS;
+                    req->start = req->header_val = i;
+                }
+                continue;
             }
             /* New header row starts */
             else if (req->status == MK_ST_HEADER_VAL_STARTS) {
                 /* Maybe there is no more headers and we reach the end ? */
                 if (buffer[i] == '\r') {
-                    req->status = MK_ST_HEADER_END;
-                    req->start--;
-                    //req->end--;
-                    //printf("len=%i\n", field_len());
-
                     mark_end();
-
-                    //printf("start=%i e/nd=%i\n", req->start, req->end);
-                    //printf("->'%c'\n", buffer[req->start]);
-                    printf("len=%i\n", field_len());
                     if (field_len() <= 0) {
                         return MK_HTTP_ERROR;
                     }
+                    req->status = MK_ST_HEADER_END;
 
                     /*
                      * A header row has ended, lets lookup the header and populate
@@ -352,7 +341,6 @@ int mk_http_parser(struct mk_http_parser *req, char *buffer, int len)
                 if (buffer[i] == '\n') {
                     req->status = MK_ST_HEADER_KEY;
                     req->chars = -1;
-                    mark_end();
                     parse_next();
                 }
                 else {
@@ -407,10 +395,14 @@ int mk_http_parser(struct mk_http_parser *req, char *buffer, int len)
         if (req->status == MK_ST_HEADER_KEY) {
             return MK_HTTP_PENDING;
         }
-        else {
+        else if (req->status == MK_ST_HEADER_VALUE) {
+            if (field_len() < 0) {
+                return MK_HTTP_PENDING;
+            }
         }
     }
     else if (req->level == REQ_LEVEL_BODY) {
+        printf("header_content_length: %lu\n", req->header_content_length);
         if (req->header_content_length > 0 &&
             req->body_received < req->header_content_length) {
             return MK_HTTP_PENDING;

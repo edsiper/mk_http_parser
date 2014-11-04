@@ -57,7 +57,7 @@ enum {
     MK_ST_REQ_PROT_VERSION  ,
     MK_ST_FIRST_CONTINUE    ,
     MK_ST_FIRST_FINALIZING  ,    /* LEVEL_FIRST finalize the request */
-    MK_ST_FIRST_COMPLETE    , 
+    MK_ST_FIRST_COMPLETE    ,
     /* REQ_HEADERS */
     MK_ST_HEADER_KEY        ,
     MK_ST_HEADER_SEP        ,
@@ -199,8 +199,14 @@ static inline int eval_field(struct mk_http_parser *req, char *buffer)
     case MK_ST_HEADER_VAL_STARTS:
         printf("MK_ST_HEADER_VAL_STARTS: ");
         break;
+    case MK_ST_HEADER_VALUE:
+        printf("MK_ST_HEADER_VALUE     : ");
+        break;
+    case MK_ST_HEADER_END:
+        printf("MK_ST_HEADER_END       : ");
+        break;
     default:
-        printf("\033[31mUNKNOWN UNKNOWN\033[0m       : ");
+        printf("\033[31mUNKNOWN STATUS (%i)\033[0m     : ", req->status);
         break;
     };
 

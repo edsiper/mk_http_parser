@@ -30,13 +30,20 @@ int t_failed;
 
 void test(char *id, char *buf, int res)
 {
+    int i;
     int len;
     int ret;
     int status = TEST_FAIL;
     struct mk_http_parser *req = mk_http_parser_new();
 
     len = strlen(buf);
-    ret = mk_http_parser(req, buf, len);
+
+    for (i = 0; i < len; i++) {
+        ret = mk_http_parser(req, buf, 1);
+        if (ret == MK_HTTP_ERROR) {
+            break;
+        }
+    }
 
     if (res == MK_HTTP_OK) {
         if (ret == MK_HTTP_OK) {
@@ -101,7 +108,6 @@ void test(char *id, char *buf, int res)
 
     printf("%s]", ANSI_RESET);
 
-    int i;
     printf(ANSI_BOLD ANSI_YELLOW "\n                 *");
     for (i = 0; i < 50; i++) {
         printf("-");
@@ -113,6 +119,7 @@ void test(char *id, char *buf, int res)
     }
     else if (status == TEST_FAIL) {
         t_failed++;
+        exit(1);
     }
 
     free(req);
@@ -153,7 +160,7 @@ int main()
 
     /* Test Headers: format */
     char *r50 = "GET / HTTP/1.0\r\n:\r\n\r\n";
-    char *r51 = "GET / HTTP/1.0\r\nA: B\r\n\r\n";
+    char *r51 = "GET / HTTP/1.0\r\nABC: B\r\n\r\n";
     char *r52 = "GET / HTTP/1.0\r\nA1: AAAA\r\nA2:   BBBB\r\n\r\n";
     char *r53 = "GET / HTTP/1.0\r\nB1: BBAA\r\nB2:   BBBB   \r\n\r\n";
     char *r54 = "GET / HTTP/1.0\r\nB1: BBAA\r\nB2:   BBBB   \r\n\rA";
@@ -168,7 +175,6 @@ int main()
 
     TEST(r50, MK_HTTP_ERROR);
     TEST(r51, MK_HTTP_OK);
-
     TEST(r52, MK_HTTP_OK);
     TEST(r53, MK_HTTP_OK);
     TEST(r54, MK_HTTP_ERROR);

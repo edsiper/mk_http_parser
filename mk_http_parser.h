@@ -43,6 +43,7 @@ typedef struct
 
 enum {
     REQ_LEVEL_FIRST    = 1,
+    REQ_LEVEL_CONTINUE ,
     REQ_LEVEL_HEADERS  ,
     REQ_LEVEL_END      ,
     REQ_LEVEL_BODY
@@ -56,7 +57,8 @@ enum {
     MK_ST_REQ_QUERY_STRING  ,
     MK_ST_REQ_PROT_VERSION  ,
     MK_ST_FIRST_CONTINUE    ,
-    MK_ST_FIRST_FINALIZE    ,    /* LEVEL_FIRST finalize the request */
+    MK_ST_FIRST_FINALIZING  ,    /* LEVEL_FIRST finalize the request */
+    MK_ST_FIRST_COMPLETE    ,
 
     /* REQ_HEADERS */
     MK_ST_HEADER_KEY        ,
@@ -64,9 +66,7 @@ enum {
     MK_ST_HEADER_VAL_STARTS ,
     MK_ST_HEADER_VALUE      ,
     MK_ST_HEADER_END        ,
-    MK_ST_BLOCK_END         ,
-
-    MK_ST_LF
+    MK_ST_BLOCK_END
 };
 
 /*
@@ -103,6 +103,7 @@ struct mk_http_header {
 
 /* This structure is the 'Parser Context' */
 struct mk_http_parser {
+    int i;
     int level;   /* request level */
     int status;  /* level status */
     int next;    /* something next after status ? */
@@ -198,8 +199,14 @@ static inline int eval_field(struct mk_http_parser *req, char *buffer)
     case MK_ST_HEADER_VAL_STARTS:
         printf("MK_ST_HEADER_VAL_STARTS: ");
         break;
+    case MK_ST_HEADER_VALUE:
+        printf("MK_ST_HEADER_VALUE     : ");
+        break;
+    case MK_ST_HEADER_END:
+        printf("MK_ST_HEADER_END       : ");
+        break;
     default:
-        printf("\033[31mUNKNOWN UNKNOWN\033[0m       : ");
+        printf("\033[31mUNKNOWN STATUS (%i)\033[0m     : ", req->status);
         break;
     };
 

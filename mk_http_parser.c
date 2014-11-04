@@ -381,11 +381,12 @@ int mk_http_parser(struct mk_http_parser *req, char *buffer, int len)
              * - A Body content (POST/PUT methods
              */
             if (req->header_content_length > 0) {
+                req->body_received += (limit - i);
+
                 if (req->body_received == req->header_content_length) {
                     return MK_HTTP_OK;
                 }
                 else {
-                    req->body_received++;
                     return MK_HTTP_PENDING;
                 }
             }
@@ -416,11 +417,11 @@ int mk_http_parser(struct mk_http_parser *req, char *buffer, int len)
     }
     else if (req->level == REQ_LEVEL_BODY) {
         if (req->header_content_length > 0) {
+            req->body_received += (limit - i);
             if (req->header_content_length == req->body_received) {
                 return MK_HTTP_OK;
             }
             else {
-                req->body_received++;
                 return MK_HTTP_PENDING;
             }
         }

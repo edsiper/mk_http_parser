@@ -38,12 +38,16 @@ void test(char *id, char *buf, int res)
 
     len = strlen(buf);
 
+    /* Iterator test */
     for (i = 0; i < len; i++) {
         ret = mk_http_parser(req, buf, 1);
         if (ret == MK_HTTP_ERROR) {
             break;
         }
     }
+
+    /* One shot */
+    //ret = mk_http_parser(req, buf, len);
 
     if (res == MK_HTTP_OK) {
         if (ret == MK_HTTP_OK) {

@@ -211,6 +211,7 @@ int mk_http_parser(struct mk_http_parser *req, char *buffer, int len)
                 else {
                     req->level  = REQ_LEVEL_HEADERS;
                     req->status = MK_ST_HEADER_KEY;
+                    //req->chars = -1;
                     continue;
                 }
                 break;
@@ -280,6 +281,7 @@ int mk_http_parser(struct mk_http_parser *req, char *buffer, int len)
                         req->header_min = -1;
                         req->header_max = -1;
                     };
+                    req->header_key = i;
                     continue;
                 }
 

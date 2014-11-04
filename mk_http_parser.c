@@ -23,8 +23,8 @@
 
 #include "mk_http_parser.h"
 
-#define mark_end()    req->end   = i; req->chars = -1; eval_field(req, buffer)
-#define parse_next()  req->start = i + 1; continue
+#define mark_end()    req->end    = req->i; req->chars = -1; printf("%s:%i\n", __FILE__, __LINE__);eval_field(req, buffer)
+#define parse_next()  req->start  = req->i + 1; continue
 #define field_len()   (req->end - req->start)
 #define header_scope_eq(req, x) req->header_min = req->header_max = x
 
@@ -139,14 +139,21 @@ int mk_http_parser(struct mk_http_parser *req, char *buffer, int len)
 {
     int i;
     int ret;
+    int limit;
 
-    for (i = 0; i < len; i++, req->chars++) {
+    limit = len + req->i;
+    for (i = req->i; i < limit; i++, req->i++, req->chars++) {
+        printf("i=%i len=%i ; buf[i]='%c' req->start=%i req->end=%i\n",
+               i, len, buffer[i], req->start, req->end);
+
         /* FIRST LINE LEVEL: Method, URI & Protocol */
         if (req->level == REQ_LEVEL_FIRST) {
             switch (req->status) {
             case MK_ST_REQ_METHOD:                      /* HTTP Method */
                 if (buffer[i] == ' ') {
                     mark_end();
+                    printf("i=%i len=%i ; buf[i]='%c' req->start=%i req->end=%i\n",
+                           i, len, buffer[i], req->start, req->end);
                     req->status = MK_ST_REQ_URI;
                     if (req->end < 2) {
                         return MK_HTTP_ERROR;
@@ -182,41 +189,38 @@ int mk_http_parser(struct mk_http_parser *req, char *buffer, int len)
                     if (field_len() != 8) {
                         return MK_HTTP_ERROR;
                     }
-                    req->status = MK_ST_LF;
-                    continue;
+                    req->status = MK_ST_FIRST_FINALIZING;
+                    parse_next();
                 }
                 break;
-            case MK_ST_LF:                              /* New Line */
+            case MK_ST_FIRST_FINALIZING:                  /* New Line */
                 if (buffer[i] == '\n') {
-                    req->status = MK_ST_FIRST_CONTINUE;
-                    continue;
+                    req->status = MK_ST_FIRST_COMPLETE;
+                    parse_next();
                 }
                 else {
                     return MK_HTTP_ERROR;
                 }
                 break;
-            case MK_ST_FIRST_CONTINUE:                  /* First line finalizing */
+            case MK_ST_FIRST_COMPLETE:
                 if (buffer[i] == '\r') {
-                    req->status = MK_ST_FIRST_FINALIZE;
-                    continue;
-                }
-                else {
-                    req->level = REQ_LEVEL_HEADERS;
-                    req->status = MK_ST_HEADER_KEY;
-                    i--;
-                    mark_end();
+                    req->status = MK_ST_BLOCK_END;
                     parse_next();
                 }
-                break;
-            case MK_ST_FIRST_FINALIZE:                 /* First line END */
-                if (buffer[i] == '\n') {
+                else {
                     req->level  = REQ_LEVEL_HEADERS;
                     req->status = MK_ST_HEADER_KEY;
                     parse_next();
                 }
+                break;
+            case MK_ST_BLOCK_END:
+                if (buffer[i] == '\n') {
+                    return MK_HTTP_OK;
+                }
                 else {
                     return MK_HTTP_ERROR;
                 }
+                break;
             };
         }
         /* HEADERS: all headers stuff */
@@ -282,7 +286,6 @@ int mk_http_parser(struct mk_http_parser *req, char *buffer, int len)
                     /* Set the key/value middle point */
                     req->header_key = req->start;
                     req->header_sep = i;
-
                     mark_end();
 
                     /* validate length */
@@ -373,8 +376,11 @@ int mk_http_parser(struct mk_http_parser *req, char *buffer, int len)
 
     if (req->level == REQ_LEVEL_FIRST) {
         if (req->status == MK_ST_REQ_METHOD) {
-            if (field_len() == 0 || field_len() > 10) {
+            if (req->i > 10) {
                 return MK_HTTP_ERROR;
+            }
+            else {
+                return MK_HTTP_PENDING;
             }
         }
 
@@ -383,7 +389,7 @@ int mk_http_parser(struct mk_http_parser *req, char *buffer, int len)
     /* No headers */
     if (req->level == REQ_LEVEL_HEADERS) {
         if (req->status == MK_ST_HEADER_KEY) {
-            return MK_HTTP_OK;
+            return MK_HTTP_PENDING;
         }
         else {
         }
@@ -400,7 +406,6 @@ int mk_http_parser(struct mk_http_parser *req, char *buffer, int len)
         }
 
     }
-
     return MK_HTTP_PENDING;
 }
 
@@ -409,6 +414,7 @@ struct mk_http_parser *mk_http_parser_new()
     struct mk_http_parser *req;
 
     req = malloc(sizeof(struct mk_http_parser));
+    req->i      = 0;
     req->level  = REQ_LEVEL_FIRST;
     req->status = MK_ST_REQ_METHOD;
     req->length = 0;

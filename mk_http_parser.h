@@ -56,8 +56,8 @@ enum {
     MK_ST_REQ_QUERY_STRING  ,
     MK_ST_REQ_PROT_VERSION  ,
     MK_ST_FIRST_CONTINUE    ,
-    MK_ST_FIRST_FINALIZE    ,    /* LEVEL_FIRST finalize the request */
-
+    MK_ST_FIRST_FINALIZING  ,    /* LEVEL_FIRST finalize the request */
+    MK_ST_FIRST_COMPLETE    , 
     /* REQ_HEADERS */
     MK_ST_HEADER_KEY        ,
     MK_ST_HEADER_SEP        ,
@@ -103,6 +103,7 @@ struct mk_http_header {
 
 /* This structure is the 'Parser Context' */
 struct mk_http_parser {
+    int i;
     int level;   /* request level */
     int status;  /* level status */
     int next;    /* something next after status ? */

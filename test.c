@@ -30,13 +30,21 @@ int t_failed;
 
 void test(char *id, char *buf, int res)
 {
+    int i;
     int len;
     int ret;
     int status = TEST_FAIL;
     struct mk_http_parser *req = mk_http_parser_new();
 
     len = strlen(buf);
-    ret = mk_http_parser(req, buf, len);
+
+    for (i = 0; i < len; i++) {
+        //printf("dipatch: '%c'\n", buf[i]);
+        ret = mk_http_parser(req, buf, 1);
+        if (ret != MK_HTTP_PENDING) {
+            break;
+        }
+    }
 
     if (res == MK_HTTP_OK) {
         if (ret == MK_HTTP_OK) {
@@ -101,7 +109,6 @@ void test(char *id, char *buf, int res)
 
     printf("%s]", ANSI_RESET);
 
-    int i;
     printf(ANSI_BOLD ANSI_YELLOW "\n                 *");
     for (i = 0; i < 50; i++) {
         printf("-");
@@ -113,6 +120,7 @@ void test(char *id, char *buf, int res)
     }
     else if (status == TEST_FAIL) {
         t_failed++;
+        exit(1);
     }
 
     free(req);

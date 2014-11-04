@@ -222,12 +222,23 @@ int main()
                  "Content-Length: -10\r\n\r\n";
     char *r204 = "POST / HTTP/1.0\r\n"
                  "Content-Length: A\r\n\r\n";
+    char *r205 = "POST / HTTP/1.0\r\n"
+                 "Content-Length: 1\r\n\r\n"
+                 " ";
+    char *r206 = "POST / HTTP/1.0\r\n"
+                 "Content-Length: 0\r\n\r\n";
+    char *r207 = "POST / HTTP/1.0\r\n"
+                 "Content-Length: 1\r\n\r\n";
+
 
     TEST(r200, MK_HTTP_OK);
     TEST(r201, MK_HTTP_PENDING);
     TEST(r202, MK_HTTP_PENDING);
     TEST(r203, MK_HTTP_ERROR);
     TEST(r204, MK_HTTP_ERROR);
+    TEST(r205, MK_HTTP_OK);
+    TEST(r206, MK_HTTP_OK);
+    TEST(r207, MK_HTTP_PENDING);
 
     printf("%s===> Tests Passed:%s %s%s%i/%i%s\n\n",
            ANSI_BOLD, ANSI_RESET,

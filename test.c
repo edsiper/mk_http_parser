@@ -161,7 +161,7 @@ int main()
 
     /* Test Headers: format */
     char *r50 = "GET / HTTP/1.0\r\n:\r\n\r\n";
-    char *r51 = "GET / HTTP/1.0\r\nA: B\r\n\r\n";
+    char *r51 = "GET / HTTP/1.0\r\nABC: B\r\n\r\n";
     char *r52 = "GET / HTTP/1.0\r\nA1: AAAA\r\nA2:   BBBB\r\n\r\n";
     char *r53 = "GET / HTTP/1.0\r\nB1: BBAA\r\nB2:   BBBB   \r\n\r\n";
     char *r54 = "GET / HTTP/1.0\r\nB1: BBAA\r\nB2:   BBBB   \r\n\rA";
@@ -176,7 +176,6 @@ int main()
 
     TEST(r50, MK_HTTP_ERROR);
     TEST(r51, MK_HTTP_OK);
-
     TEST(r52, MK_HTTP_OK);
     TEST(r53, MK_HTTP_OK);
     TEST(r54, MK_HTTP_ERROR);

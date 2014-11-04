@@ -20,6 +20,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
+#include <stdint.h>
+#include <limits.h>
 
 #include "mk_http_parser.h"
 
@@ -110,10 +113,22 @@ static inline int header_lookup(struct mk_http_parser *req, char *buffer)
             header->val.len  = req->end - req->header_val;
 
             if (i == MK_HEADER_CONTENT_LENGTH) {
-                req->header_content_length = atol(header->val.data);
-                if (req->header_content_length < 0) {
+                long val;
+                char *endptr;
+
+                val = strtol(header->val.data, &endptr, 10);
+                if ((errno == ERANGE && (val == LONG_MAX || val == LONG_MIN))
+                    || (errno != 0 && val == 0)) {
                     return -1;
                 }
+                if (endptr == header->val.data) {
+                    return -1;
+                }
+                if (val < 0) {
+                    return -1;
+                }
+
+                req->header_content_length = val;
             }
 
             printf("                 ===> %sMATCH%s '%s' = '",
